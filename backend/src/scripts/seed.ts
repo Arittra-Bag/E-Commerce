@@ -384,6 +384,10 @@ export default async function seedDemoData({ container }: ExecArgs) {
       },
     });
 
+    if (!publishableApiKeyResult?.id) {
+      throw new Error("Failed to create a publishable API key.");
+    }
+
     publishableApiKey = publishableApiKeyResult as PublishableApiKey;
   }
 
