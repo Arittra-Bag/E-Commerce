@@ -1,0 +1,22 @@
+{
+  "name": "e-commerce",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Tenant-ready Medusa B2C SaaS starter",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "setup": "bash ./scripts/setup-dev.sh",
+    "dev": "bash ./scripts/dev.sh",
+    "dev:backend": "bash ./scripts/backend-dev.sh",
+    "dev:storefront": "bash ./scripts/storefront-dev.sh",
+    "services:up": "docker compose up -d",
+    "services:down": "docker compose down",
+    "services:reset": "docker compose down -v",
+    "db:migrate": "bash ./scripts/backend-migrate.sh",
+    "db:seed": "bash ./scripts/backend-seed.sh",
+    "tenant:bootstrap": "bash ./scripts/backend-bootstrap-tenant.sh",
+    "check": "bash -n ./scripts/*.sh && npm run check --prefix backend && npm run check --prefix storefront"
+  }
+}

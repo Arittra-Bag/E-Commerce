@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            backend/package-lock.json
+            storefront/package-lock.json
+
+      - name: Install backend dependencies
+        run: npm ci
+        working-directory: backend
+
+      - name: Install storefront dependencies
+        run: npm ci
+        working-directory: storefront
+
+      - name: Validate backend types
+        run: npm run check
+        working-directory: backend
+
+      - name: Validate storefront types
+        run: npm run check
+        working-directory: storefront
+
+      - name: Validate shell scripts
+        run: bash -n ./scripts/*.sh
+
+      - name: Validate Docker Compose
+        run: docker compose config --quiet
