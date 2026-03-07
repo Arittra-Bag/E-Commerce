@@ -105,12 +105,12 @@ Local infrastructure runs on the following ports:
 
 ### Admin Setup
 
-The initial database seed does not automatically generate an administrator account. To create an admin user, execute the following commands:
+The initial database seed does not automatically generate an administrator account. To create an admin user, choose a unique local email and password and execute the following commands:
 
 ```bash
 source ./scripts/env.sh
 cd backend
-npx medusa user -e admin@example.com -p StrongPassword123
+npx medusa user -e <your_admin_email> -p <your_admin_password>
 ```
 
 Following creation, log in to the admin interface at `http://localhost:9000/app`.
@@ -141,7 +141,7 @@ The following local development and build artifact directories are safely ignore
 - `storefront/node_modules/`
 - `storefront/.next/`
 
-The repository is configured such that it is safe to push current modifications.
+The local artifacts listed above are ignored by version control, but you should still review `git status` before pushing to confirm no unintended tracked files or secrets are included.
 
 ## Architectural Direction
 
