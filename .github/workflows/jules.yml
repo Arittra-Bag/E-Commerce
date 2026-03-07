@@ -1,0 +1,43 @@
+name: Jules Invoke
+
+on:
+  workflow_dispatch:
+    inputs:
+      prompt:
+        description: Prompt to send to Jules
+        required: true
+        type: string
+      include_last_commit:
+        description: Include the latest commit in the Jules context
+        required: false
+        default: false
+        type: boolean
+      include_commit_log:
+        description: Include recent commit history in the Jules context
+        required: false
+        default: false
+        type: boolean
+      starting_branch:
+        description: Branch Jules should start from
+        required: false
+        default: main
+        type: string
+
+jobs:
+  invoke-jules:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Jules Invoke
+        uses: BeksOmega/jules-action@v1.0.0
+        with:
+          prompt: ${{ inputs.prompt }}
+          jules_api_key: ${{ secrets.JULES_API_KEY }}
+          include_last_commit: ${{ inputs.include_last_commit }}
+          include_commit_log: ${{ inputs.include_commit_log }}
+          starting_branch: ${{ inputs.starting_branch }}
