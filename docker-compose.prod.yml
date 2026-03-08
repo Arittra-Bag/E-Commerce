@@ -1,0 +1,71 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: medusa_b2c
+      POSTGRES_USER: medusa
+      POSTGRES_PASSWORD: medusa
+    ports:
+      - "15432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U medusa -d medusa_b2c"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: always
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "16379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    volumes:
+      - redis_data:/data
+    restart: always
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      NODE_ENV: production
+      PORT: 9000
+      DATABASE_URL: postgres://medusa:medusa@postgres:5432/medusa_b2c
+      REDIS_URL: redis://redis:6379
+      # Add required secrets, like COOKIE_SECRET, JWT_SECRET, etc.
+      # STORE_CORS: http://localhost:8000
+      # ADMIN_CORS: http://localhost:9000
+      # AUTH_CORS: http://localhost:8000,http://localhost:9000
+    ports:
+      - "9000:9000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: always
+
+  storefront:
+    build:
+      context: ./storefront
+      dockerfile: Dockerfile
+    environment:
+      NODE_ENV: production
+      PORT: 8000
+      NEXT_PUBLIC_MEDUSA_BACKEND_URL: http://backend:9000
+      # NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY: set_your_publishable_key
+    ports:
+      - "8000:8000"
+    depends_on:
+      - backend
+    restart: always
+
+volumes:
+  postgres_data:
+  redis_data:
