@@ -82,8 +82,47 @@ export const resolveTenantContext = async (
 ): Promise<TenantContext | null> => {
   const tenantModuleService: TenantModuleService = req.scope.resolve(TENANT_MODULE)
 
+  const getAuthContext = (): Record<string, unknown> => {
+    const authContext = (req as MedusaRequest & { auth_context?: unknown }).auth_context
+    return authContext && typeof authContext === "object"
+      ? (authContext as Record<string, unknown>)
+      : {}
+  }
+
+  const toRecord = (value: unknown): Record<string, unknown> =>
+    value && typeof value === "object" ? (value as Record<string, unknown>) : {}
+
+  const getClaim = (
+    claims: Record<string, unknown>,
+    keys: string[]
+  ): string | null => {
+    for (const key of keys) {
+      const value = claims[key]
+      if (typeof value === "string" && value.trim()) {
+        return value.trim()
+      }
+    }
+
+    return null
+  }
+
+  const authContext = getAuthContext()
+  const authClaims = {
+    ...toRecord(authContext["app_metadata"]),
+    ...toRecord(authContext["actor_metadata"]),
+    ...toRecord(authContext["claims"]),
+    ...toRecord(authContext["session"]),
+  }
+
+  const authenticated = Boolean(
+    getClaim(authContext, ["auth_identity_id", "actor_id", "user_id", "customer_id"])
+  )
+
+  const claimedTenantId = getClaim(authClaims, ["tenant_id", "tenantId"])
+  const claimedTenantSlug = getClaim(authClaims, ["tenant_slug", "tenantSlug"])?.toLowerCase() ?? null
+
   const tenantId = req.get("x-tenant-id")?.trim()
-  if (tenantId) {
+  if (tenantId && authenticated && claimedTenantId && tenantId === claimedTenantId) {
     const [tenant] = (await tenantModuleService.listTenants({
       id: tenantId,
       is_active: true,
@@ -95,7 +134,7 @@ export const resolveTenantContext = async (
   }
 
   const tenantSlug = req.get("x-tenant-slug")?.trim().toLowerCase()
-  if (tenantSlug) {
+  if (tenantSlug && authenticated && claimedTenantSlug && tenantSlug === claimedTenantSlug) {
     const [tenant] = (await tenantModuleService.listTenants({
       slug: tenantSlug,
       is_active: true,
