@@ -21,7 +21,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 
 RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 --ingroup nodejs medusa
+RUN adduser --system --uid 1001 medusa
 
 # Install production dependencies
 COPY package.json package-lock.json ./
@@ -36,4 +36,4 @@ EXPOSE 9000
 
 ENV PORT=9000
 
-CMD ["npm", "start"]
+CMD ["npx", "medusa", "start"]
