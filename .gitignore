@@ -2,3 +2,6 @@
 .local-config/
 *.log
 *.pid
+.env*
+!*.example
+docker-compose.prod.yml

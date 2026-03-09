@@ -28,7 +28,6 @@ COPY package.json package-lock.json ./
 RUN npm ci --omit=dev
 
 COPY --from=builder --chown=medusa:nodejs /app/.medusa/server ./.medusa/server
-COPY --from=builder --chown=medusa:nodejs /app/medusa-config.ts ./medusa-config.ts
 
 USER medusa
 
@@ -36,4 +35,6 @@ EXPOSE 9000
 
 ENV PORT=9000
 
-CMD ["npx", "medusa", "start"]
+CMD ["sh", "-c", "npx medusa db:migrate && npx medusa start"]
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+  CMD wget -qO- http://localhost:9000/health || [ $? -eq 0 ]
