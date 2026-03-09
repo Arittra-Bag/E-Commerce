@@ -5,8 +5,6 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    ports:
-      - "15432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
@@ -18,8 +16,6 @@ services:
 
   redis:
     image: redis:7-alpine
-    ports:
-      - "16379:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -38,7 +34,8 @@ services:
       PORT: 9000
       DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       REDIS_URL: redis://redis:6379
-      # Add required secrets, like COOKIE_SECRET, JWT_SECRET, etc.
+      COOKIE_SECRET: ${COOKIE_SECRET}
+      JWT_SECRET: ${JWT_SECRET}
       # STORE_CORS: http://localhost:8000
       # ADMIN_CORS: http://localhost:9000
       # AUTH_CORS: http://localhost:8000,http://localhost:9000
