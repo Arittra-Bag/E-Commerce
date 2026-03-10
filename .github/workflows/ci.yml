@@ -101,13 +101,19 @@ jobs:
         run: |
           npm run build
           PORT=9000 npm run start &
+          backend_ready=0
           for i in {1..30}; do
-            if curl -s http://localhost:9000/health > /dev/null; then
+            if curl -fsS http://localhost:9000/health > /dev/null; then
               echo "Backend is ready!"
+              backend_ready=1
               break
             fi
             sleep 2
           done
+          if [ $backend_ready -eq 0 ]; then
+            echo "Backend did not become ready in time"
+            /bin/false
+          fi
         working-directory: backend
         env:
           DATABASE_URL: postgres://medusa:medusa@localhost:15432/medusa_b2c
