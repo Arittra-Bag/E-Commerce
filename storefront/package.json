@@ -14,7 +14,7 @@
     "start": "next start -p 8000",
     "lint": "next lint",
     "analyze": "ANALYZE=true next build",
-    "test:unit": "jest",
+    "test:unit": "NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY=pk_test_12345 NEXT_PUBLIC_MEDUSA_BACKEND_URL=http://localhost:9000 jest",
     "test:e2e": "playwright test"
   },
   "dependencies": {

@@ -100,7 +100,7 @@ jobs:
       - name: Build and Start Backend for E2E
         run: |
           npm run build
-          npm run start &
+          PORT=9000 npm run start &
           for i in {1..30}; do
             if curl -s http://localhost:9000/health > /dev/null; then
               echo "Backend is ready!"
