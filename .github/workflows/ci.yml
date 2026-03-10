@@ -85,6 +85,13 @@ jobs:
       - name: Run backend integration tests
         run: npm run test:integration:http
         working-directory: backend
+        env:
+          DATABASE_URL: postgres://medusa:medusa@localhost:15432/medusa_b2c
+          REDIS_URL: redis://localhost:16379
+          DB_HOST: localhost
+          DB_PORT: 15432
+          DB_USERNAME: medusa
+          DB_PASSWORD: medusa
 
       - name: Run storefront unit tests
         run: npm run test:unit
