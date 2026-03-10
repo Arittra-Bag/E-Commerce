@@ -44,3 +44,55 @@ jobs:
 
       - name: Validate Docker Compose
         run: docker compose config --quiet
+
+      - name: Start services
+        run: docker compose up -d
+
+      - name: Wait for services to be healthy
+        run: |
+          echo "Waiting for PostgreSQL to be ready..."
+          postgres_ready=0
+          for i in {1..30}; do
+            if docker compose exec -T postgres pg_isready -U medusa -d medusa_b2c; then
+              postgres_ready=1
+              break
+            fi
+            sleep 2
+          done
+          if [ $postgres_ready -eq 0 ]; then
+            echo "PostgreSQL did not become ready in time"
+            exit 1
+          fi
+
+          echo "Waiting for Redis to be ready..."
+          redis_ready=0
+          for i in {1..30}; do
+            if docker compose exec -T redis redis-cli ping | grep -q PONG; then
+              redis_ready=1
+              break
+            fi
+            sleep 2
+          done
+          if [ $redis_ready -eq 0 ]; then
+            echo "Redis did not become ready in time"
+            exit 1
+          fi
+
+      - name: Run backend unit tests
+        run: npm run test:unit
+        working-directory: backend
+
+      - name: Run backend integration tests
+        run: npm run test:integration:http
+        working-directory: backend
+        env:
+          DATABASE_URL: postgres://medusa:medusa@localhost:15432/medusa_b2c
+          REDIS_URL: redis://localhost:16379
+          DB_HOST: localhost
+          DB_PORT: 15432
+          DB_USERNAME: medusa
+          DB_PASSWORD: medusa
+
+      - name: Run storefront unit tests
+        run: npm run test:unit
+        working-directory: storefront
