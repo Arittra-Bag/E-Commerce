@@ -61,7 +61,7 @@ jobs:
           done
           if [ $postgres_ready -eq 0 ]; then
             echo "PostgreSQL did not become ready in time"
-            exit 1
+            /bin/false
           fi
 
           echo "Waiting for Redis to be ready..."
@@ -75,7 +75,7 @@ jobs:
           done
           if [ $redis_ready -eq 0 ]; then
             echo "Redis did not become ready in time"
-            exit 1
+            /bin/false
           fi
 
       - name: Run backend unit tests
@@ -96,3 +96,28 @@ jobs:
       - name: Run storefront unit tests
         run: npm run test:unit
         working-directory: storefront
+
+      - name: Build and Start Backend for E2E
+        run: |
+          npm run build
+          npm run start &
+          for i in {1..30}; do
+            if curl -s http://localhost:9000/health > /dev/null; then
+              echo "Backend is ready!"
+              break
+            fi
+            sleep 2
+          done
+        working-directory: backend
+        env:
+          DATABASE_URL: postgres://medusa:medusa@localhost:15432/medusa_b2c
+          REDIS_URL: redis://localhost:16379
+
+      - name: Run storefront E2E tests
+        run: |
+          npx playwright install --with-deps
+          npm run test:e2e
+        working-directory: storefront
+        env:
+          NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY: pk_test_12345
+          NEXT_PUBLIC_MEDUSA_BACKEND_URL: http://localhost:9000
