@@ -2,7 +2,20 @@ import { loadEnv, defineConfig } from '@medusajs/framework/utils'
 
 loadEnv(process.env.NODE_ENV || 'development', process.cwd())
 
+const { JWT_SECRET, COOKIE_SECRET } = process.env;
+
+if (!JWT_SECRET) {
+  throw new Error("JWT_SECRET is not set");
+}
+
+if (!COOKIE_SECRET) {
+  throw new Error("COOKIE_SECRET is not set");
+}
+
 module.exports = defineConfig({
+  admin: {
+    disable: process.env.DISABLE_MEDUSA_ADMIN === "true" || process.env.DISABLE_MEDUSA_ADMIN === "1",
+  },
   projectConfig: {
     databaseUrl: process.env.DATABASE_URL,
     redisUrl: process.env.REDIS_URL,
@@ -11,8 +24,8 @@ module.exports = defineConfig({
       storeCors: process.env.STORE_CORS!,
       adminCors: process.env.ADMIN_CORS!,
       authCors: process.env.AUTH_CORS!,
-      jwtSecret: process.env.JWT_SECRET || "supersecret",
-      cookieSecret: process.env.COOKIE_SECRET || "supersecret",
+      jwtSecret: JWT_SECRET,
+      cookieSecret: COOKIE_SECRET,
     }
   },
   modules: [
