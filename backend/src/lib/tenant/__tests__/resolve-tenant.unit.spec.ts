@@ -1,4 +1,4 @@
-import { resolveTenantContext } from "../resolve-tenant"
+import { resolveTenantContext, attachTenantContext } from "../resolve-tenant"
 
 const TENANT_MODULE = "tenant"
 
@@ -126,5 +126,55 @@ describe("resolveTenantContext", () => {
 
     expect(result?.source).toBe("default")
     expect(result?.tenant.id).toBe("tenant_beta")
+  })
+})
+
+describe("attachTenantContext", () => {
+  it("attaches tenant context to request and calls next", async () => {
+    const req = buildReq({
+      headers: {
+        "x-tenant-id": "tenant_alpha",
+      },
+      tenants,
+      authContext: {
+        auth_identity_id: "auth_123",
+        claims: {
+          tenant_id: "tenant_alpha",
+        },
+      },
+    })
+    const next = jest.fn()
+
+    await attachTenantContext(req as any, {} as any, next)
+
+    expect((req as any).context).toBeDefined()
+    expect((req as any).context.tenant).toBeDefined()
+    expect((req as any).context.tenant.source).toBe("header:id")
+    expect((req as any).context.tenant.tenant.slug).toBe("alpha")
+    expect(next).toHaveBeenCalledTimes(1)
+    expect(next).toHaveBeenCalledWith()
+  })
+
+  it("preserves existing req.context properties", async () => {
+    const req = buildReq({
+      headers: {
+        "x-tenant-id": "tenant_alpha",
+      },
+      tenants,
+      authContext: {
+        auth_identity_id: "auth_123",
+        claims: {
+          tenant_id: "tenant_alpha",
+        },
+      },
+    })
+    ;(req as any).context = { existing: true }
+    const next = jest.fn()
+
+    await attachTenantContext(req as any, {} as any, next)
+
+    expect((req as any).context.existing).toBe(true)
+    expect((req as any).context.tenant).toBeDefined()
+    expect(next).toHaveBeenCalledTimes(1)
   })
 })
