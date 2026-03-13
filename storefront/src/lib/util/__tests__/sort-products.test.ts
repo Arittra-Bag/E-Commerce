@@ -33,13 +33,13 @@ describe("sortProducts", () => {
     expect(sorted.map(p => p.id)).toEqual(expectedIds)
   })
 
-  it.each([
+  const edgeCases: any[] = [
     {
       description: "no variants",
       product: {
         id: "prod_no_var",
         created_at: "2023-01-04T10:00:00Z",
-      } as any as HttpTypes.StoreProduct,
+      },
     },
     {
       description: "empty variants",
@@ -47,11 +47,13 @@ describe("sortProducts", () => {
         id: "prod_empty_var",
         created_at: "2023-01-05T10:00:00Z",
         variants: [],
-      } as any as HttpTypes.StoreProduct,
+      },
     },
-  ])(
+  ]
+
+  it.each(edgeCases)(
     "should handle products with $description gracefully when sorting by price",
-    ({ product }) => {
+    ({ product }: { description: string; product: HttpTypes.StoreProduct }) => {
       const products = [...mockProducts, product]
 
       // Ascending: Infinity price -> should be at the end
