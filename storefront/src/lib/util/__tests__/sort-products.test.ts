@@ -45,32 +45,36 @@ describe("sortProducts", () => {
     expect(sorted[2].id).toBe("prod_1") // 2023-01-01
   })
 
-  const verifyInfinitePriceSort = (product: HttpTypes.StoreProduct) => {
-    const products = [...mockProducts, product]
+  it.each([
+    {
+      description: "no variants",
+      product: {
+        id: "prod_no_var",
+        created_at: "2023-01-04T10:00:00Z",
+      } as HttpTypes.StoreProduct,
+    },
+    {
+      description: "empty variants",
+      product: {
+        id: "prod_empty_var",
+        created_at: "2023-01-05T10:00:00Z",
+        variants: [],
+      } as HttpTypes.StoreProduct,
+    },
+  ])(
+    "should handle products with $description gracefully when sorting by price",
+    ({ product }) => {
+      const products = [...mockProducts, product]
 
-    // Ascending: Infinity price -> should be at the end
-    const sortedAsc = sortProducts([...products], "price_asc")
-    expect(sortedAsc[sortedAsc.length - 1].id).toBe(product.id)
+      // Ascending: Infinity price -> should be at the end
+      const sortedAsc = sortProducts([...products], "price_asc")
+      expect(sortedAsc[sortedAsc.length - 1].id).toBe(product.id)
 
-    // Descending: Infinity price -> should be at the start
-    const sortedDesc = sortProducts([...products], "price_desc")
-    expect(sortedDesc[0].id).toBe(product.id)
-  }
-
-  it("should handle products with no variants gracefully when sorting by price", () => {
-    verifyInfinitePriceSort({
-      id: "prod_no_var",
-      created_at: "2023-01-04T10:00:00Z",
-    } as HttpTypes.StoreProduct)
-  })
-
-  it("should handle products with empty variants gracefully when sorting by price", () => {
-    verifyInfinitePriceSort({
-      id: "prod_empty_var",
-      created_at: "2023-01-05T10:00:00Z",
-      variants: []
-    } as HttpTypes.StoreProduct)
-  })
+      // Descending: Infinity price -> should be at the start
+      const sortedDesc = sortProducts([...products], "price_desc")
+      expect(sortedDesc[0].id).toBe(product.id)
+    }
+  )
 
   it("should handle variants with no calculated_price gracefully", () => {
     const pNoPrice = {
