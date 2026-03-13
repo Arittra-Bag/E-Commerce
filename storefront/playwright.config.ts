@@ -21,5 +21,10 @@ export default defineConfig({
     command: 'npm run dev',
     url: 'http://localhost:8000',
     reuseExistingServer: !process.env.CI,
+    env: {
+      MEDUSA_BACKEND_URL: 'http://localhost:9000',
+      NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY: 'pk_test_12345',
+      NEXT_PUBLIC_MEDUSA_BACKEND_URL: 'http://localhost:9000',
+    },
   },
 });
