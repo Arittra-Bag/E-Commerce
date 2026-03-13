@@ -101,7 +101,7 @@ jobs:
         run: |
           npm run build
           npx medusa db:migrate
-          PORT=9000 npm run start &
+          PORT=9000 DISABLE_MEDUSA_ADMIN=true npm run start &
           backend_ready=0
           for i in {1..30}; do
             if curl -fsS http://localhost:9000/health > /dev/null; then
