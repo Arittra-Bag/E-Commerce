@@ -45,39 +45,31 @@ describe("sortProducts", () => {
     expect(sorted[2].id).toBe("prod_1") // 2023-01-01
   })
 
+  const verifyInfinitePriceSort = (product: HttpTypes.StoreProduct) => {
+    const products = [...mockProducts, product]
+
+    // Ascending: Infinity price -> should be at the end
+    const sortedAsc = sortProducts([...products], "price_asc")
+    expect(sortedAsc[sortedAsc.length - 1].id).toBe(product.id)
+
+    // Descending: Infinity price -> should be at the start
+    const sortedDesc = sortProducts([...products], "price_desc")
+    expect(sortedDesc[0].id).toBe(product.id)
+  }
+
   it("should handle products with no variants gracefully when sorting by price", () => {
-    const pNoVariants = {
+    verifyInfinitePriceSort({
       id: "prod_no_var",
       created_at: "2023-01-04T10:00:00Z",
-    } as HttpTypes.StoreProduct
-
-    const products = [...mockProducts, pNoVariants]
-
-    // Ascending: missing variants -> Infinity price -> should be at the end
-    const sortedAsc = sortProducts([...products], "price_asc")
-    expect(sortedAsc[sortedAsc.length - 1].id).toBe("prod_no_var")
-
-    // Descending: missing variants -> Infinity price -> should be at the start
-    const sortedDesc = sortProducts([...products], "price_desc")
-    expect(sortedDesc[0].id).toBe("prod_no_var")
+    } as HttpTypes.StoreProduct)
   })
 
   it("should handle products with empty variants gracefully when sorting by price", () => {
-    const pEmptyVariants = {
+    verifyInfinitePriceSort({
       id: "prod_empty_var",
       created_at: "2023-01-05T10:00:00Z",
       variants: []
-    } as HttpTypes.StoreProduct
-
-    const products = [...mockProducts, pEmptyVariants]
-
-    // Ascending: empty variants -> Infinity price -> should be at the end
-    const sortedAsc = sortProducts([...products], "price_asc")
-    expect(sortedAsc[sortedAsc.length - 1].id).toBe("prod_empty_var")
-
-    // Descending: empty variants -> Infinity price -> should be at the start
-    const sortedDesc = sortProducts([...products], "price_desc")
-    expect(sortedDesc[0].id).toBe("prod_empty_var")
+    } as HttpTypes.StoreProduct)
   })
 
   it("should handle variants with no calculated_price gracefully", () => {
