@@ -56,6 +56,7 @@ const Addresses = ({
     if (data.same_as_billing === "on") {
       data.billing_address = { ...data.shipping_address }
     }
+    delete data.same_as_billing
 
     return await setAddresses(currentState, data as HttpTypes.StoreUpdateCart)
   }

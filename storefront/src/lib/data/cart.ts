@@ -339,11 +339,6 @@ export async function setAddresses(currentState: unknown, data: HttpTypes.StoreU
       throw new Error("No data found when setting addresses")
     }
 
-    const cartId = await getCartId()
-    if (!cartId) {
-      throw new Error("No existing cart found when setting addresses")
-    }
-
     await updateCart(data)
   } catch (e: any) {
     return e.message
