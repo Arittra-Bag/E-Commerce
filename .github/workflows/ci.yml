@@ -100,7 +100,8 @@ jobs:
       - name: Build and Start Backend for E2E
         run: |
           npm run build
-          PORT=9000 npm run start &
+          npx medusa db:migrate
+          PORT=9000 DISABLE_MEDUSA_ADMIN=true npm run start &
           backend_ready=0
           for i in {1..30}; do
             if curl -fsS http://localhost:9000/health > /dev/null; then
