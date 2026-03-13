@@ -333,55 +333,24 @@ export async function submitPromotionForm(
   }
 }
 
-export async function setAddresses(currentState: unknown, formData: Record<string, any>) {
+export async function setAddresses(currentState: unknown, data: HttpTypes.StoreUpdateCart) {
   try {
-    if (!formData) {
-      throw new Error("No form data found when setting addresses")
+    if (!data) {
+      throw new Error("No data found when setting addresses")
     }
+
     const cartId = await getCartId()
     if (!cartId) {
       throw new Error("No existing cart found when setting addresses")
     }
 
-    const data = {
-      shipping_address: {
-        first_name: formData["shipping_address.first_name"],
-        last_name: formData["shipping_address.last_name"],
-        address_1: formData["shipping_address.address_1"],
-        address_2: "",
-        company: formData["shipping_address.company"],
-        postal_code: formData["shipping_address.postal_code"],
-        city: formData["shipping_address.city"],
-        country_code: formData["shipping_address.country_code"],
-        province: formData["shipping_address.province"],
-        phone: formData["shipping_address.phone"],
-      },
-      email: formData["email"],
-    } as any
-
-    const sameAsBilling = formData["same_as_billing"]
-    if (sameAsBilling === "on") data.billing_address = data.shipping_address
-
-    if (sameAsBilling !== "on")
-      data.billing_address = {
-        first_name: formData["billing_address.first_name"],
-        last_name: formData["billing_address.last_name"],
-        address_1: formData["billing_address.address_1"],
-        address_2: "",
-        company: formData["billing_address.company"],
-        postal_code: formData["billing_address.postal_code"],
-        city: formData["billing_address.city"],
-        country_code: formData["billing_address.country_code"],
-        province: formData["billing_address.province"],
-        phone: formData["billing_address.phone"],
-      }
     await updateCart(data)
   } catch (e: any) {
     return e.message
   }
 
   redirect(
-    `/${formData["shipping_address.country_code"]}/checkout?step=delivery`
+    `/${data.shipping_address?.country_code}/checkout?step=delivery`
   )
 }
 
