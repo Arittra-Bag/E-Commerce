@@ -119,6 +119,7 @@ jobs:
         env:
           DATABASE_URL: postgres://medusa:medusa@localhost:15432/medusa_b2c
           REDIS_URL: redis://localhost:16379
+          MEDUSA_DISABLE_ADMIN: "true"
 
       - name: Run storefront E2E tests
         run: |
