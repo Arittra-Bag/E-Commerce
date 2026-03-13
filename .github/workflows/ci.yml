@@ -92,6 +92,8 @@ jobs:
           DB_PORT: 15432
           DB_USERNAME: medusa
           DB_PASSWORD: medusa
+          JWT_SECRET: test_secret
+          COOKIE_SECRET: test_secret
 
       - name: Run storefront unit tests
         run: npm run test:unit
@@ -99,6 +101,8 @@ jobs:
 
       - name: Build and Start Backend for E2E
         run: |
+          npx medusa db:migrate
+          npm run seed
           npm run build
           PORT=9000 npm run start &
           backend_ready=0
@@ -118,6 +122,9 @@ jobs:
         env:
           DATABASE_URL: postgres://medusa:medusa@localhost:15432/medusa_b2c
           REDIS_URL: redis://localhost:16379
+          JWT_SECRET: test_secret
+          COOKIE_SECRET: test_secret
+          DISABLE_MEDUSA_ADMIN: true
 
       - name: Run storefront E2E tests
         run: |
