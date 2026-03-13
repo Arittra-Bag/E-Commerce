@@ -3,7 +3,14 @@ set -euo pipefail
 
 SCRIPT_SOURCE="${BASH_SOURCE:-$0}"
 ROOT_DIR="$(cd "$(dirname "$SCRIPT_SOURCE")/.." && pwd)"
-NODE_BIN="${NODE_BIN:-/opt/homebrew/opt/node@22/bin}"
+
+if command -v node >/dev/null 2>&1; then
+  DEFAULT_NODE_BIN="$(dirname "$(command -v node)")"
+else
+  DEFAULT_NODE_BIN="/opt/homebrew/opt/node@22/bin"
+fi
+
+NODE_BIN="${NODE_BIN:-$DEFAULT_NODE_BIN}"
 
 if [[ ! -x "$NODE_BIN/node" ]]; then
   echo "Node 22 was not found at $NODE_BIN."
