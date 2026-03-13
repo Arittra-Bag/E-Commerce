@@ -100,6 +100,8 @@ jobs:
       - name: Build and Start Backend for E2E
         run: |
           npm run build
+          npx medusa db:migrate
+          npm run seed
           PORT=9000 npm run start &
           backend_ready=0
           for i in {1..30}; do
@@ -118,6 +120,9 @@ jobs:
         env:
           DATABASE_URL: postgres://medusa:medusa@localhost:15432/medusa_b2c
           REDIS_URL: redis://localhost:16379
+          JWT_SECRET: supersecret
+          COOKIE_SECRET: supersecret
+          DISABLE_MEDUSA_ADMIN: true
 
       - name: Run storefront E2E tests
         run: |
