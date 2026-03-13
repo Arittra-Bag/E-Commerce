@@ -13,6 +13,9 @@ if (!COOKIE_SECRET) {
 }
 
 module.exports = defineConfig({
+  admin: {
+    disable: process.env.DISABLE_MEDUSA_ADMIN === "true" || process.env.DISABLE_MEDUSA_ADMIN === "1",
+  },
   projectConfig: {
     databaseUrl: process.env.DATABASE_URL,
     redisUrl: process.env.REDIS_URL,
