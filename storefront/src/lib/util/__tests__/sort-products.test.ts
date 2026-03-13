@@ -24,25 +24,13 @@ describe("sortProducts", () => {
     expect(sortProducts([], "price_asc")).toEqual([])
   })
 
-  it("should sort products by price ascending (price_asc)", () => {
-    const sorted = sortProducts([...mockProducts], "price_asc")
-    expect(sorted[0].id).toBe("prod_2") // 50
-    expect(sorted[1].id).toBe("prod_1") // 100
-    expect(sorted[2].id).toBe("prod_3") // 150
-  })
-
-  it("should sort products by price descending (price_desc)", () => {
-    const sorted = sortProducts([...mockProducts], "price_desc")
-    expect(sorted[0].id).toBe("prod_3") // 150
-    expect(sorted[1].id).toBe("prod_1") // 100
-    expect(sorted[2].id).toBe("prod_2") // 50
-  })
-
-  it("should sort products by latest arrivals (created_at)", () => {
-    const sorted = sortProducts([...mockProducts], "created_at")
-    expect(sorted[0].id).toBe("prod_2") // 2023-01-03
-    expect(sorted[1].id).toBe("prod_3") // 2023-01-02
-    expect(sorted[2].id).toBe("prod_1") // 2023-01-01
+  it.each([
+    ["price_asc", ["prod_2", "prod_1", "prod_3"]],
+    ["price_desc", ["prod_3", "prod_1", "prod_2"]],
+    ["created_at", ["prod_2", "prod_3", "prod_1"]],
+  ] as const)("should sort products by %s", (sortBy, expectedIds) => {
+    const sorted = sortProducts([...mockProducts], sortBy)
+    expect(sorted.map(p => p.id)).toEqual(expectedIds)
   })
 
   it.each([
@@ -67,12 +55,10 @@ describe("sortProducts", () => {
       const products = [...mockProducts, product]
 
       // Ascending: Infinity price -> should be at the end
-      const sortedAsc = sortProducts([...products], "price_asc")
-      expect(sortedAsc[sortedAsc.length - 1].id).toBe(product.id)
+      expect(sortProducts([...products], "price_asc").pop()?.id).toBe(product.id)
 
       // Descending: Infinity price -> should be at the start
-      const sortedDesc = sortProducts([...products], "price_desc")
-      expect(sortedDesc[0].id).toBe(product.id)
+      expect(sortProducts([...products], "price_desc").shift()?.id).toBe(product.id)
     }
   )
 
@@ -85,8 +71,7 @@ describe("sortProducts", () => {
 
     const products = [p2, pNoPrice] // p2 has min 50, pNoPrice has min 0 (fallback)
 
-    const sortedAsc = sortProducts([...products], "price_asc")
-    expect(sortedAsc[0].id).toBe("prod_no_price") // 0
-    expect(sortedAsc[1].id).toBe("prod_2") // 50
+    expect(sortProducts([...products], "price_asc").map(p => p.id))
+      .toEqual(["prod_no_price", "prod_2"])
   })
 })
