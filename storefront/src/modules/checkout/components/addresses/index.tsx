@@ -37,7 +37,31 @@ const Addresses = ({
     router.push(pathname + "?step=address")
   }
 
-  const [message, formAction] = useActionState(setAddresses, null)
+  const setAddressesAction = async (currentState: unknown, formData: FormData) => {
+    const data: any = {
+      shipping_address: {},
+      billing_address: {}
+    }
+
+    formData.forEach((value, key) => {
+      if (key.startsWith("shipping_address.")) {
+        data.shipping_address[key.replace("shipping_address.", "")] = value
+      } else if (key.startsWith("billing_address.")) {
+        data.billing_address[key.replace("billing_address.", "")] = value
+      } else {
+        data[key] = value
+      }
+    })
+
+    if (data.same_as_billing === "on") {
+      data.billing_address = { ...data.shipping_address }
+    }
+    delete data.same_as_billing
+
+    return await setAddresses(currentState, data as HttpTypes.StoreUpdateCart)
+  }
+
+  const [message, formAction] = useActionState(setAddressesAction, null)
 
   return (
     <div className="bg-white">
