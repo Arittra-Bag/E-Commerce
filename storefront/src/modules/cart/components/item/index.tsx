@@ -82,7 +82,7 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
             >
               {Array.from(
                 {
-                  length: Math.max(item.quantity, Math.min(maxQuantity, 10)),
+                  length: Math.min(maxQuantity, 10),
                 },
                 (_, i) => (
                   <option value={i + 1} key={i}>
