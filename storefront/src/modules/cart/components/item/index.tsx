@@ -40,10 +40,7 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
       })
   }
 
-  const maxQuantity =
-    item.variant?.manage_inventory && !item.variant?.allow_backorder
-      ? item.variant?.inventory_quantity || 0
-      : 10
+  const maxQuantity = item.variant?.manage_inventory ? item.variant?.inventory_quantity || 0 : 10
 
   return (
     <Table.Row className="w-full" data-testid="product-row">
@@ -85,7 +82,7 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
             >
               {Array.from(
                 {
-                  length: Math.max(item.quantity, maxQuantity),
+                  length: Math.max(item.quantity, Math.min(maxQuantity, 10)),
                 },
                 (_, i) => (
                   <option value={i + 1} key={i}>
