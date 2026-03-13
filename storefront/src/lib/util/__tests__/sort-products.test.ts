@@ -39,7 +39,7 @@ describe("sortProducts", () => {
       product: {
         id: "prod_no_var",
         created_at: "2023-01-04T10:00:00Z",
-      } as HttpTypes.StoreProduct,
+      } as unknown as HttpTypes.StoreProduct,
     },
     {
       description: "empty variants",
@@ -47,7 +47,7 @@ describe("sortProducts", () => {
         id: "prod_empty_var",
         created_at: "2023-01-05T10:00:00Z",
         variants: [],
-      } as HttpTypes.StoreProduct,
+      } as unknown as HttpTypes.StoreProduct,
     },
   ])(
     "should handle products with $description gracefully when sorting by price",
@@ -67,7 +67,7 @@ describe("sortProducts", () => {
       id: "prod_no_price",
       created_at: "2023-01-05T10:00:00Z",
       variants: [{ id: "var_1" }] as any
-    } as HttpTypes.StoreProduct
+    } as unknown as HttpTypes.StoreProduct
 
     const products = [p2, pNoPrice] // p2 has min 50, pNoPrice has min 0 (fallback)
 
