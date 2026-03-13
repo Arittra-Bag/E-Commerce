@@ -333,48 +333,47 @@ export async function submitPromotionForm(
   }
 }
 
-// TODO: Pass a POJO instead of a form entity here
-export async function setAddresses(currentState: unknown, formData: FormData) {
+export async function setAddresses(currentState: unknown, formData: Record<string, any>) {
   try {
     if (!formData) {
       throw new Error("No form data found when setting addresses")
     }
-    const cartId = getCartId()
+    const cartId = await getCartId()
     if (!cartId) {
       throw new Error("No existing cart found when setting addresses")
     }
 
     const data = {
       shipping_address: {
-        first_name: formData.get("shipping_address.first_name"),
-        last_name: formData.get("shipping_address.last_name"),
-        address_1: formData.get("shipping_address.address_1"),
+        first_name: formData["shipping_address.first_name"],
+        last_name: formData["shipping_address.last_name"],
+        address_1: formData["shipping_address.address_1"],
         address_2: "",
-        company: formData.get("shipping_address.company"),
-        postal_code: formData.get("shipping_address.postal_code"),
-        city: formData.get("shipping_address.city"),
-        country_code: formData.get("shipping_address.country_code"),
-        province: formData.get("shipping_address.province"),
-        phone: formData.get("shipping_address.phone"),
+        company: formData["shipping_address.company"],
+        postal_code: formData["shipping_address.postal_code"],
+        city: formData["shipping_address.city"],
+        country_code: formData["shipping_address.country_code"],
+        province: formData["shipping_address.province"],
+        phone: formData["shipping_address.phone"],
       },
-      email: formData.get("email"),
+      email: formData["email"],
     } as any
 
-    const sameAsBilling = formData.get("same_as_billing")
+    const sameAsBilling = formData["same_as_billing"]
     if (sameAsBilling === "on") data.billing_address = data.shipping_address
 
     if (sameAsBilling !== "on")
       data.billing_address = {
-        first_name: formData.get("billing_address.first_name"),
-        last_name: formData.get("billing_address.last_name"),
-        address_1: formData.get("billing_address.address_1"),
+        first_name: formData["billing_address.first_name"],
+        last_name: formData["billing_address.last_name"],
+        address_1: formData["billing_address.address_1"],
         address_2: "",
-        company: formData.get("billing_address.company"),
-        postal_code: formData.get("billing_address.postal_code"),
-        city: formData.get("billing_address.city"),
-        country_code: formData.get("billing_address.country_code"),
-        province: formData.get("billing_address.province"),
-        phone: formData.get("billing_address.phone"),
+        company: formData["billing_address.company"],
+        postal_code: formData["billing_address.postal_code"],
+        city: formData["billing_address.city"],
+        country_code: formData["billing_address.country_code"],
+        province: formData["billing_address.province"],
+        phone: formData["billing_address.phone"],
       }
     await updateCart(data)
   } catch (e: any) {
@@ -382,7 +381,7 @@ export async function setAddresses(currentState: unknown, formData: FormData) {
   }
 
   redirect(
-    `/${formData.get("shipping_address.country_code")}/checkout?step=delivery`
+    `/${formData["shipping_address.country_code"]}/checkout?step=delivery`
   )
 }
 

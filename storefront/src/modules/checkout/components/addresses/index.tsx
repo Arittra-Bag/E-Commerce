@@ -37,7 +37,13 @@ const Addresses = ({
     router.push(pathname + "?step=address")
   }
 
-  const [message, formAction] = useActionState(setAddresses, null)
+  const setAddressesAction = async (currentState: unknown, formData: FormData) => {
+    const data = Object.fromEntries(formData.entries())
+
+    return await setAddresses(currentState, data)
+  }
+
+  const [message, formAction] = useActionState(setAddressesAction, null)
 
   return (
     <div className="bg-white">
