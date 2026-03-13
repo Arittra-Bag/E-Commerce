@@ -43,7 +43,7 @@ const Addresses = ({
       billing_address: {}
     }
 
-    for (const [key, value] of formData.entries()) {
+    formData.forEach((value, key) => {
       if (key.startsWith("shipping_address.")) {
         data.shipping_address[key.replace("shipping_address.", "")] = value
       } else if (key.startsWith("billing_address.")) {
@@ -51,7 +51,7 @@ const Addresses = ({
       } else {
         data[key] = value
       }
-    }
+    })
 
     if (data.same_as_billing === "on") {
       data.billing_address = { ...data.shipping_address }

@@ -349,8 +349,12 @@ export async function setAddresses(currentState: unknown, data: HttpTypes.StoreU
     return e.message
   }
 
+  const countryCode = typeof data.shipping_address === "object" && data.shipping_address !== null
+    ? data.shipping_address.country_code
+    : undefined
+
   redirect(
-    `/${data.shipping_address?.country_code}/checkout?step=delivery`
+    `/${countryCode || "us"}/checkout?step=delivery`
   )
 }
 
