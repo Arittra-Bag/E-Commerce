@@ -43,7 +43,7 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
   const maxQuantity =
     item.variant?.manage_inventory && !item.variant?.allow_backorder
       ? item.variant?.inventory_quantity || 0
-      : 10
+      : 99
 
   return (
     <Table.Row className="w-full" data-testid="product-row">
