@@ -100,6 +100,7 @@ jobs:
       - name: Build and Start Backend for E2E
         run: |
           npm run build
+          npx medusa db:migrate
           PORT=9000 npm run start &
           backend_ready=0
           for i in {1..30}; do
@@ -127,3 +128,4 @@ jobs:
         env:
           NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY: pk_test_12345
           NEXT_PUBLIC_MEDUSA_BACKEND_URL: http://localhost:9000
+          MEDUSA_BACKEND_URL: http://localhost:9000
