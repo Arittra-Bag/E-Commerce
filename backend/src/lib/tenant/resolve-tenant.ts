@@ -147,8 +147,9 @@ export const resolveTenantContext = async (
 
   const activeTenants = await listActiveTenants(req)
   const hosts = readHosts(req)
+  const hostSet = new Set(hosts)
   const hostMatch = activeTenants.find((tenant) =>
-    toDomains(tenant.domains).some((domain) => hosts.includes(domain))
+    toDomains(tenant.domains).some((domain) => hostSet.has(domain))
   )
 
   if (hostMatch) {
