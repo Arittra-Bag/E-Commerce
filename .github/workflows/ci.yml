@@ -100,7 +100,8 @@ jobs:
       - name: Build and Start Backend for E2E
         run: |
           npx medusa db:migrate
-          npx medusa db:seed
+          npm run bootstrap:tenant
+          npm run seed
           npm run build
           PORT=9000 npm run start &
           backend_ready=0
