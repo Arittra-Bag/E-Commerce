@@ -43,6 +43,34 @@ export const retrieveCustomer =
       .catch(() => null)
   }
 
+export const updatePassword = async (
+  _currentState: Record<string, unknown>,
+  formData: FormData
+) => {
+  const newPassword = formData.get("new_password") as string
+  const confirmPassword = formData.get("confirm_password") as string
+
+  if (newPassword !== confirmPassword) {
+    return { success: false, error: "Passwords do not match" }
+  }
+
+  try {
+    const headers = {
+      ...(await getAuthHeaders()),
+    }
+
+    await sdk.client.fetch(`/auth/customer/emailpass/update`, {
+      method: "POST",
+      body: { password: newPassword },
+      headers,
+    })
+
+    return { success: true, error: null }
+  } catch (error: any) {
+    return { success: false, error: error.toString() }
+  }
+}
+
 export const updateCustomer = async (body: HttpTypes.StoreUpdateCustomer) => {
   const headers = {
     ...(await getAuthHeaders()),
