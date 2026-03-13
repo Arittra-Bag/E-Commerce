@@ -60,13 +60,23 @@ const toContext = (
 })
 
 const readHosts = (req: MedusaRequest): string[] => {
-  const headers = [req.get("x-forwarded-host"), req.get("host")]
+  const result: string[] = []
 
-  return headers
-    .flatMap((entry) => (entry ? entry.split(",") : []))
-    .map((entry) => entry.trim().toLowerCase())
-    .filter(Boolean)
-    .map((entry) => entry.split(":")[0])
+  const processHeader = (header?: string) => {
+    if (!header) return
+    const parts = header.split(",")
+    for (let i = 0; i < parts.length; i++) {
+      const trimmed = parts[i].trim()
+      if (trimmed) {
+        result.push(trimmed.toLowerCase().split(":")[0])
+      }
+    }
+  }
+
+  processHeader(req.get("x-forwarded-host"))
+  processHeader(req.get("host"))
+
+  return result
 }
 
 const listActiveTenants = async (req: MedusaRequest): Promise<TenantRecord[]> => {
