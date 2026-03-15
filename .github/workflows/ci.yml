@@ -103,6 +103,8 @@ jobs:
         run: |
           npx medusa db:migrate
           npm run seed
+          PUBLISHABLE_API_KEY=$(npx medusa exec ./src/scripts/get-publishable-api-key.ts | tail -n 1)
+          echo "NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY=$PUBLISHABLE_API_KEY" >> $GITHUB_ENV
           npm run build
           PORT=9000 DISABLE_MEDUSA_ADMIN=true npm run start &
           backend_ready=0
@@ -132,6 +134,6 @@ jobs:
           npm run test:e2e
         working-directory: storefront
         env:
-          NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY: pk_test_12345
+          NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY: ${{ env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY }}
           MEDUSA_BACKEND_URL: http://localhost:9000
           NEXT_PUBLIC_MEDUSA_BACKEND_URL: http://localhost:9000
