@@ -134,6 +134,5 @@ jobs:
         working-directory: storefront
         env:
           NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY: pk_test_12345
-          MEDUSA_BACKEND_URL: http://localhost:9000
           NEXT_PUBLIC_MEDUSA_BACKEND_URL: http://localhost:9000
           MEDUSA_BACKEND_URL: http://localhost:9000
