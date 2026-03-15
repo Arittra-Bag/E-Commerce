@@ -83,13 +83,18 @@ jobs:
         working-directory: backend
 
       - name: Run backend integration tests
-        run: npm run test:integration:http
+        run: |
+          DATABASE_URL="postgres://${DB_USERNAME}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}" \
+          REDIS_URL="$REDIS_URL" \
+          JWT_SECRET="$JWT_SECRET" \
+          COOKIE_SECRET="$COOKIE_SECRET" \
+          npm run test:integration:http
         working-directory: backend
         env:
-          DATABASE_URL: postgres://medusa:medusa@localhost:15432/medusa_b2c
-          REDIS_URL: redis://localhost:16379
-          DB_HOST: localhost
+          REDIS_URL: redis://127.0.0.1:16379
+          DB_HOST: 127.0.0.1
           DB_PORT: 15432
+          DB_NAME: medusa_b2c
           DB_USERNAME: medusa
           DB_PASSWORD: medusa
           JWT_SECRET: test_secret
@@ -104,6 +109,7 @@ jobs:
           set -euo pipefail
 
           pushd backend
+          export DATABASE_URL="postgres://${DB_USERNAME}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}"
           npx medusa db:migrate
           npm run seed
           PUBLISHABLE_API_KEY=$(npx medusa exec ./src/scripts/get-publishable-api-key.ts | tail -n 1)
@@ -155,8 +161,12 @@ jobs:
           npm run test:e2e
           popd
         env:
-          DATABASE_URL: postgres://medusa:medusa@127.0.0.1:15432/medusa_b2c
           REDIS_URL: redis://127.0.0.1:16379
+          DB_HOST: 127.0.0.1
+          DB_PORT: 15432
+          DB_NAME: medusa_b2c
+          DB_USERNAME: medusa
+          DB_PASSWORD: medusa
           JWT_SECRET: test_secret
           COOKIE_SECRET: test_secret
           DISABLE_MEDUSA_ADMIN: true
