@@ -7,9 +7,5 @@ export default defineMiddlewares({
       matcher: "/store/*",
       middlewares: [attachTenantContext],
     },
-    {
-      matcher: "/admin/*",
-      middlewares: [attachTenantContext],
-    },
   ],
 })
