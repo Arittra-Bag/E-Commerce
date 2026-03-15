@@ -99,17 +99,26 @@ jobs:
         run: npm run test:unit
         working-directory: storefront
 
-      - name: Build and Start Backend for E2E
+      - name: Run storefront E2E tests
         run: |
+          set -euo pipefail
+
+          pushd backend
           npx medusa db:migrate
           npm run seed
           PUBLISHABLE_API_KEY=$(npx medusa exec ./src/scripts/get-publishable-api-key.ts | tail -n 1)
-          echo "NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY=$PUBLISHABLE_API_KEY" >> $GITHUB_ENV
+          if [ -z "$PUBLISHABLE_API_KEY" ]; then
+            echo "Failed to resolve seeded publishable API key"
+            exit 1
+          fi
           npm run build
-          PORT=9000 DISABLE_MEDUSA_ADMIN=true npm run start &
+          PORT=9000 DISABLE_MEDUSA_ADMIN=true npm run start > /tmp/medusa-e2e-backend.log 2>&1 &
+          BACKEND_PID=$!
+          trap 'kill $BACKEND_PID || true; cat /tmp/medusa-e2e-backend.log || true' EXIT
+
           backend_ready=0
-          for i in {1..30}; do
-            if curl -fsS http://localhost:9000/health > /dev/null; then
+          for i in {1..60}; do
+            if curl -fsS http://127.0.0.1:9000/health > /dev/null; then
               echo "Backend is ready!"
               backend_ready=1
               break
@@ -118,22 +127,36 @@ jobs:
           done
           if [ $backend_ready -eq 0 ]; then
             echo "Backend did not become ready in time"
-            /bin/false
+            cat /tmp/medusa-e2e-backend.log || true
+            exit 1
           fi
-        working-directory: backend
+
+          regions_ready=0
+          for i in {1..30}; do
+            if curl -fsS -H "x-publishable-api-key: $PUBLISHABLE_API_KEY" http://127.0.0.1:9000/store/regions > /dev/null; then
+              echo "Store regions endpoint is ready!"
+              regions_ready=1
+              break
+            fi
+            sleep 2
+          done
+          if [ $regions_ready -eq 0 ]; then
+            echo "Store regions endpoint did not become ready in time"
+            cat /tmp/medusa-e2e-backend.log || true
+            exit 1
+          fi
+          popd
+
+          pushd storefront
+          npx playwright install --with-deps
+          NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY="$PUBLISHABLE_API_KEY" \
+          MEDUSA_BACKEND_URL=http://127.0.0.1:9000 \
+          NEXT_PUBLIC_MEDUSA_BACKEND_URL=http://127.0.0.1:9000 \
+          npm run test:e2e
+          popd
         env:
-          DATABASE_URL: postgres://medusa:medusa@localhost:15432/medusa_b2c
-          REDIS_URL: redis://localhost:16379
+          DATABASE_URL: postgres://medusa:medusa@127.0.0.1:15432/medusa_b2c
+          REDIS_URL: redis://127.0.0.1:16379
           JWT_SECRET: test_secret
           COOKIE_SECRET: test_secret
           DISABLE_MEDUSA_ADMIN: true
-
-      - name: Run storefront E2E tests
-        run: |
-          npx playwright install --with-deps
-          npm run test:e2e
-        working-directory: storefront
-        env:
-          NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY: ${{ env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY }}
-          MEDUSA_BACKEND_URL: http://localhost:9000
-          NEXT_PUBLIC_MEDUSA_BACKEND_URL: http://localhost:9000
