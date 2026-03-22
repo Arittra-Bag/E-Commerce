@@ -12,7 +12,7 @@ if (!COOKIE_SECRET) {
   throw new Error("COOKIE_SECRET is not set");
 }
 
-module.exports = defineConfig({
+export default defineConfig({
   admin: {
     disable: process.env.DISABLE_MEDUSA_ADMIN === "true" || process.env.DISABLE_MEDUSA_ADMIN === "1",
   },

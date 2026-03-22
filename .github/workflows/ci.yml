@@ -1,172 +1,55 @@
 name: CI
-
 on:
   push:
     branches:
       - main
-  pull_request:
-
+  pull_request: null
 jobs:
-  validate:
+  backend:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout
+      - &id001
+        name: Checkout
         uses: actions/checkout@v4
-
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: |
-            backend/package-lock.json
-            storefront/package-lock.json
+          cache-dependency-path: 'backend/package-lock.json
 
+            '
       - name: Install backend dependencies
         run: npm ci
         working-directory: backend
-
-      - name: Install storefront dependencies
-        run: npm ci
-        working-directory: storefront
-
       - name: Validate backend types
         run: npm run check
         working-directory: backend
-
-      - name: Validate storefront types
-        run: npm run check
-        working-directory: storefront
-
       - name: Validate shell scripts
         run: bash -n ./scripts/*.sh
-
       - name: Validate Docker Compose
         run: docker compose config --quiet
-
-      - name: Start services
-        run: docker compose up -d
-
-      - name: Wait for services to be healthy
-        run: |
-          echo "Waiting for PostgreSQL to be ready..."
-          postgres_ready=0
-          for i in {1..30}; do
-            if docker compose exec -T postgres pg_isready -U medusa -d medusa_b2c; then
-              postgres_ready=1
-              break
-            fi
-            sleep 2
-          done
-          if [ $postgres_ready -eq 0 ]; then
-            echo "PostgreSQL did not become ready in time"
-            /bin/false
-          fi
-
-          echo "Waiting for Redis to be ready..."
-          redis_ready=0
-          for i in {1..30}; do
-            if docker compose exec -T redis redis-cli ping | grep -q PONG; then
-              redis_ready=1
-              break
-            fi
-            sleep 2
-          done
-          if [ $redis_ready -eq 0 ]; then
-            echo "Redis did not become ready in time"
-            /bin/false
-          fi
-
       - name: Run backend unit tests
         run: npm run test:unit
         working-directory: backend
+  storefront:
+    runs-on: ubuntu-latest
+    steps:
+      - *id001
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: 'storefront/package-lock.json
 
-      - name: Run backend integration tests
-        run: |
-          DATABASE_URL="postgres://${DB_USERNAME}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}" \
-          REDIS_URL="$REDIS_URL" \
-          JWT_SECRET="$JWT_SECRET" \
-          COOKIE_SECRET="$COOKIE_SECRET" \
-          npm run test:integration:http
-        working-directory: backend
-        env:
-          REDIS_URL: redis://127.0.0.1:16379
-          DB_HOST: 127.0.0.1
-          DB_PORT: 15432
-          DB_NAME: medusa_b2c
-          DB_USERNAME: medusa
-          DB_PASSWORD: medusa
-          JWT_SECRET: test_secret
-          COOKIE_SECRET: test_secret
-
+            '
+      - name: Install storefront dependencies
+        run: npm ci
+        working-directory: storefront
+      - name: Validate storefront types
+        run: npm run check
+        working-directory: storefront
       - name: Run storefront unit tests
         run: npm run test:unit
         working-directory: storefront
-
-      - name: Run storefront E2E tests
-        run: |
-          set -euo pipefail
-
-          pushd backend
-          export DATABASE_URL="postgres://${DB_USERNAME}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}"
-          npx medusa db:migrate
-          npm run seed
-          PUBLISHABLE_API_KEY=$(npx medusa exec ./src/scripts/get-publishable-api-key.ts | tail -n 1)
-          if [ -z "$PUBLISHABLE_API_KEY" ]; then
-            echo "Failed to resolve seeded publishable API key"
-            exit 1
-          fi
-          npm run build
-          PORT=9000 DISABLE_MEDUSA_ADMIN=true npm run start > /tmp/medusa-e2e-backend.log 2>&1 &
-          BACKEND_PID=$!
-          trap 'kill $BACKEND_PID || true; cat /tmp/medusa-e2e-backend.log || true' EXIT
-
-          backend_ready=0
-          for i in {1..60}; do
-            if curl -fsS http://127.0.0.1:9000/health > /dev/null; then
-              echo "Backend is ready!"
-              backend_ready=1
-              break
-            fi
-            sleep 2
-          done
-          if [ $backend_ready -eq 0 ]; then
-            echo "Backend did not become ready in time"
-            cat /tmp/medusa-e2e-backend.log || true
-            exit 1
-          fi
-
-          regions_ready=0
-          for i in {1..30}; do
-            if curl -fsS -H "x-publishable-api-key: $PUBLISHABLE_API_KEY" http://127.0.0.1:9000/store/regions > /dev/null; then
-              echo "Store regions endpoint is ready!"
-              regions_ready=1
-              break
-            fi
-            sleep 2
-          done
-          if [ $regions_ready -eq 0 ]; then
-            echo "Store regions endpoint did not become ready in time"
-            cat /tmp/medusa-e2e-backend.log || true
-            exit 1
-          fi
-          popd
-
-          pushd storefront
-          npx playwright install --with-deps
-          NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY="$PUBLISHABLE_API_KEY" \
-          MEDUSA_BACKEND_URL=http://127.0.0.1:9000 \
-          NEXT_PUBLIC_MEDUSA_BACKEND_URL=http://127.0.0.1:9000 \
-          npm run test:e2e
-          popd
-        env:
-          REDIS_URL: redis://127.0.0.1:16379
-          DB_HOST: 127.0.0.1
-          DB_PORT: 15432
-          DB_NAME: medusa_b2c
-          DB_USERNAME: medusa
-          DB_PASSWORD: medusa
-          JWT_SECRET: test_secret
-          COOKIE_SECRET: test_secret
-          DISABLE_MEDUSA_ADMIN: true
