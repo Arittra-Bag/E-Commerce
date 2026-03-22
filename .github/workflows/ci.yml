@@ -264,4 +264,3 @@ jobs:
           DB_PASSWORD: medusa
           JWT_SECRET: test_secret
           COOKIE_SECRET: test_secret
-          DISABLE_MEDUSA_ADMIN: true
