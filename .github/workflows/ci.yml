@@ -7,7 +7,7 @@ on:
   pull_request:
 
 jobs:
-  validate:
+  lint-and-typecheck:
     runs-on: ubuntu-latest
 
     steps:
@@ -44,6 +44,25 @@ jobs:
 
       - name: Validate Docker Compose
         run: docker compose config --quiet
+
+  backend-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            backend/package-lock.json
+
+      - name: Install backend dependencies
+        run: npm ci
+        working-directory: backend
 
       - name: Start services
         run: docker compose up -d
@@ -100,9 +119,85 @@ jobs:
           JWT_SECRET: test_secret
           COOKIE_SECRET: test_secret
 
+  storefront-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            storefront/package-lock.json
+
+      - name: Install storefront dependencies
+        run: npm ci
+        working-directory: storefront
+
       - name: Run storefront unit tests
         run: npm run test:unit
         working-directory: storefront
+
+  e2e-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            backend/package-lock.json
+            storefront/package-lock.json
+
+      - name: Install backend dependencies
+        run: npm ci
+        working-directory: backend
+
+      - name: Install storefront dependencies
+        run: npm ci
+        working-directory: storefront
+
+      - name: Start services
+        run: docker compose up -d
+
+      - name: Wait for services to be healthy
+        run: |
+          echo "Waiting for PostgreSQL to be ready..."
+          postgres_ready=0
+          for i in {1..30}; do
+            if docker compose exec -T postgres pg_isready -U medusa -d medusa_b2c; then
+              postgres_ready=1
+              break
+            fi
+            sleep 2
+          done
+          if [ $postgres_ready -eq 0 ]; then
+            echo "PostgreSQL did not become ready in time"
+            /bin/false
+          fi
+
+          echo "Waiting for Redis to be ready..."
+          redis_ready=0
+          for i in {1..30}; do
+            if docker compose exec -T redis redis-cli ping | grep -q PONG; then
+              redis_ready=1
+              break
+            fi
+            sleep 2
+          done
+          if [ $redis_ready -eq 0 ]; then
+            echo "Redis did not become ready in time"
+            /bin/false
+          fi
 
       - name: Run storefront E2E tests
         run: |
@@ -115,7 +210,7 @@ jobs:
           PUBLISHABLE_API_KEY=$(npx medusa exec ./src/scripts/get-publishable-api-key.ts | tail -n 1)
           if [ -z "$PUBLISHABLE_API_KEY" ]; then
             echo "Failed to resolve seeded publishable API key"
-            exit 1
+            /bin/false
           fi
           npm run build
           PORT=9000 DISABLE_MEDUSA_ADMIN=true npm run start > /tmp/medusa-e2e-backend.log 2>&1 &
@@ -134,7 +229,7 @@ jobs:
           if [ $backend_ready -eq 0 ]; then
             echo "Backend did not become ready in time"
             cat /tmp/medusa-e2e-backend.log || true
-            exit 1
+            /bin/false
           fi
 
           regions_ready=0
@@ -149,12 +244,12 @@ jobs:
           if [ $regions_ready -eq 0 ]; then
             echo "Store regions endpoint did not become ready in time"
             cat /tmp/medusa-e2e-backend.log || true
-            exit 1
+            /bin/false
           fi
           popd
 
           pushd storefront
-          npx playwright install --with-deps
+          npx playwright install --with-deps chromium
           NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY="$PUBLISHABLE_API_KEY" \
           MEDUSA_BACKEND_URL=http://127.0.0.1:9000 \
           NEXT_PUBLIC_MEDUSA_BACKEND_URL=http://127.0.0.1:9000 \
